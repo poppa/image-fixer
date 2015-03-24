@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,10 +9,11 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 
 namespace ImgRescale
 {
-  public partial class Form1 : Form
+  public partial class MainWindow : Form
   {
     private int defaultWidth = 0;
     private int defaultHeight = 0;
@@ -33,7 +35,7 @@ namespace ImgRescale
     private BackgroundWorker previewWorker = new BackgroundWorker();
     Properties.Settings settings = Properties.Settings.Default;
 
-    public Form1()
+    public MainWindow()
     {
       InitializeComponent();
 
@@ -45,19 +47,55 @@ namespace ImgRescale
       previewWorker.WorkerSupportsCancellation = false;
       previewWorker.DoWork += new DoWorkEventHandler(do_previewTransformation);
       previewWorker.RunWorkerCompleted  += new RunWorkerCompletedEventHandler(on_previewWorkerComplete);
+
+      int ww = settings.winWidth;
+      int wh = settings.winHeight;
+      int wx = settings.winLeft;
+      int wy = settings.winTop;
+
+      if (ww > 100)
+        this.Width = ww;
+      if (wh > 70)
+        this.Height = wh;
+      if (wx >= 0)
+        this.Left = wx;
+      if (wy >= 0)
+        this.Top = wy;
+
+      if (settings.winMaximzed) {
+        this.WindowState = FormWindowState.Maximized;
+      }
+    }
+
+    public Dictionary<string,object> GetSettings()
+    {
+      return new Dictionary<string, object>() {
+        { "saturation", this.numHue.Value },
+        { "contrast", this.numContrast.Value },
+        { "brightness", this.numIntensity.Value },
+        { "lastSourceDir", this.btnSrcDir.Text },
+        { "lastTargetDir", this.btnTargetDir.Text },
+        { "previewPath", this.previewPath }
+      };
     }
 
     private void Form1_Load(object sender, EventArgs e)
     {
       statusText1.Text = "Inväntar val av källkatalog och destinationkatalog";
       //statusText2.Text = "Logfil: " + Log.Path;
-      Log.File("Starting application dude...\n");
+      Log.File("\n\n-------------------\nStarting application dude...\n");
 
       string sd = settings.lastSrcDir;
       string td = settings.lastDestDir;
 
-      Log.File("Source dir: {0}\n", sd);
-      Log.File("Target dir: {0}\n", td);
+      if (!string.IsNullOrEmpty(sd))
+        fbdSource.SelectedPath = sd;
+
+      if (!string.IsNullOrEmpty(td))
+        fbdTarget.SelectedPath = td;
+
+      //Log.Debug("Source dir: {0}\n", sd);
+      //Log.Debug("Target dir: {0}\n", td);
 
       if (!string.IsNullOrEmpty(sd))
         btnSrcDir.Text = sd;
@@ -319,6 +357,11 @@ namespace ImgRescale
     private void pictureBox1_DoubleClick(object sender, EventArgs e)
     {
       openFileDialog1.Filter = "Bildfiler (*.JPG;*.JPEG;*.PNG;*.TIFF;*.BMP)|*.JPG;*.JPEG;*.PNG;*.TIFF;*.BMP|Alla filer (*.*)|*.*";
+
+      if (!string.IsNullOrEmpty(settings.lastPreviewDir)) {
+        openFileDialog1.InitialDirectory = settings.lastPreviewDir;
+      }
+
       var res = openFileDialog1.ShowDialog();
       if (res == System.Windows.Forms.DialogResult.OK) {
         if (pictureBox1.Image != null)
@@ -326,6 +369,10 @@ namespace ImgRescale
 
         if (pictureBox2.Image != null)
           pictureBox2.Image.Dispose();
+
+        var fi = new FileInfo(openFileDialog1.FileNames[0]);
+        settings.lastPreviewDir = fi.DirectoryName;
+        settings.Save();
 
         Log.Debug("Load file: {0}\n", openFileDialog1.FileNames[0]);
         previewPath = openFileDialog1.FileNames[0];
@@ -398,6 +445,32 @@ namespace ImgRescale
     private void btnPreview_Click(object sender, EventArgs e)
     {
       applyPreview();
+    }
+
+    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+    {
+      settings.winMaximzed = this.WindowState == FormWindowState.Maximized;
+
+      if (!settings.winMaximzed) {
+        settings.winWidth = this.Width;
+        settings.winHeight = this.Height;
+        settings.winLeft = this.Left;
+        settings.winTop = this.Top;
+      }
+      
+      settings.Save();
+    }
+
+    private void avslutaToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      this.Close();
+      Application.Exit();
+    }
+
+    private void inställningarToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+      var win = new SettingsWindow();
+      win.ShowDialog(this);
     }
   }
 }
