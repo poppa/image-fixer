@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ImgRescale")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Batch edit images")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Tekniska Verken i Linköping AB (Publ)")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ImgRescale")]
-[assembly: AssemblyCopyright("Copyright © Tekniska Verken i Linköping AB (Publ) 2015")]
+[assembly: AssemblyCopyright("Copyright © Pontus Östlund 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -14,6 +14,8 @@ namespace ImgRescale
     public SettingsWindow()
     {
       InitializeComponent();
+      nudMaxWidth.Value = Convert.ToDecimal(Properties.Settings.Default.imageMaxWidth);
+      nudMaxHeight.Value = Convert.ToDecimal(Properties.Settings.Default.imageMaxHeight);
     }
 
     private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -57,6 +59,28 @@ namespace ImgRescale
       else {
         Log.Debug("Update current config...{0} to {1}\n", idx, text);
       }
+    }
+
+    private MainWindow parentInstance()
+    {
+      return (MainWindow)Owner;
+    }
+
+    private void btnOk_Click(object sender, EventArgs e)
+    {
+      this.Close();
+    }
+
+    private void nudMaxWidth_ValueChanged(object sender, EventArgs e)
+    {
+      Properties.Settings.Default.imageMaxWidth = Convert.ToInt32(((NumericUpDown)sender).Value);
+      Properties.Settings.Default.Save();
+    }
+
+    private void nudMaxHeight_ValueChanged(object sender, EventArgs e)
+    {
+      Properties.Settings.Default.imageMaxHeight = Convert.ToInt32(((NumericUpDown)sender).Value);
+      Properties.Settings.Default.Save();
     }
   }
 }

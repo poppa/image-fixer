@@ -15,6 +15,12 @@ namespace ImgRescale
 {
   public partial class MainWindow : Form
   {
+    const int PREVIEW_MAX_WIDTH = 1000;
+    const int PREVIEW_MAX_HEIGHT = 800;
+    private string previewPath;
+    // Low resolution version to do previews on
+    private Bitmap previewImg;
+
     private int defaultWidth = 0;
     private int defaultHeight = 0;
     private bool defaultRecurse = true;
@@ -29,7 +35,6 @@ namespace ImgRescale
     const float bwgt = 0.0820f;
 
     private ImageAttributes iAttr;
-    string previewPath;
 
     private BackgroundWorker worker = new BackgroundWorker();
     private BackgroundWorker previewWorker = new BackgroundWorker();
@@ -65,14 +70,24 @@ namespace ImgRescale
       if (settings.winMaximzed) {
         this.WindowState = FormWindowState.Maximized;
       }
+
+      updateGlobalSettings();
+    }
+
+    private void updateGlobalSettings()
+    {
+      defaultWidth = settings.imageMaxWidth;
+      defaultHeight = settings.imageMaxHeight;
+      Image.MAX_WIDTH = defaultWidth;
+      Image.MAX_HEIGHT = defaultHeight;
     }
 
     public Dictionary<string,object> GetSettings()
     {
       return new Dictionary<string, object>() {
-        { "saturation", this.numHue.Value },
-        { "contrast", this.numContrast.Value },
-        { "brightness", this.numIntensity.Value },
+        { "saturation", this.nudSaturation.Value },
+        { "contrast", this.nudContrast.Value },
+        { "brightness", this.nudIntensity.Value },
         { "lastSourceDir", this.btnSrcDir.Text },
         { "lastTargetDir", this.btnTargetDir.Text },
         { "previewPath", this.previewPath }
@@ -81,9 +96,9 @@ namespace ImgRescale
 
     private void Form1_Load(object sender, EventArgs e)
     {
-      statusText1.Text = "Inväntar val av källkatalog och destinationkatalog";
+      statusText1.Text = "";
       //statusText2.Text = "Logfil: " + Log.Path;
-      Log.File("\n\n-------------------\nStarting application dude...\n");
+      Log.Debug("\n\n-------------------\nStarting application dude...\n");
 
       string sd = settings.lastSrcDir;
       string td = settings.lastDestDir;
@@ -168,7 +183,8 @@ namespace ImgRescale
       Log.Debug("Got {0} images in {1} dirs\n", Image.instances, Dir.instances);
 
       if (Image.instances > 0) {
-        statusText2.Text = Image.instances + " bilder att behandla";
+        //statusText2.Text = Image.instances + " bilder att behandla";
+        statusText2.Text = String.Format("Bearbetar bild {0}/{1}", 1, Image.instances);
         id.run();
       }
 
@@ -210,13 +226,11 @@ namespace ImgRescale
       float i = ((baseSat) * bwgt + saturation) * contrast;
 
 
-      float[][] mtx = {
-                        new float[]{ a, b, c, 0, 0 },
+      float[][] mtx = { new float[]{ a, b, c, 0, 0 },
                         new float[]{ d, e, f, 0, 0 },
                         new float[]{ g, h, i, 0, 0 },
                         new float[]{ 0, 0, 0, 1, 0 },
-                        new float[]{ adjBri, adjBri, adjBri, 0, 1 }
-                      };
+                        new float[]{ adjBri, adjBri, adjBri, 0, 1 } };
 
 #if DEBUG
       for (int ii = 0; ii < mtx.Length; ii++) {
@@ -259,7 +273,7 @@ namespace ImgRescale
         Indexer.TargetBaseDir = new System.IO.FileInfo(btnTargetDir.Text);
         Indexer.SourceBaseDir = new System.IO.FileInfo(btnSrcDir.Text);
 
-        int count = 0;
+        int count = 1;
         Indexer.OnImageProcessed += () => {
           count += 1;
           statusText2.Text = String.Format("Bearbetar bild {0}/{1}", count, Image.instances);
@@ -286,7 +300,7 @@ namespace ImgRescale
     private void applyPreview()
     {
       if (!previewWorker.IsBusy) {
-        if (previewPath != null) {
+        if (previewImg != null) {
           statusText1.Text = "Applicerar förhandsvisning...";
           disableControls();
           setMatrix();
@@ -298,59 +312,42 @@ namespace ImgRescale
       }
     }
 
-    private void trackBarHue_Scroll(object sender, EventArgs e)
+    private void trackBarSaturation_Scroll(object sender, EventArgs e)
     {
-      var s = (TrackBar)sender;
-      saturation = 1f - (s.Value / 100f);
-
-      Log.Debug("Saturation: {0}\n", saturation);
-
-      numHue.Value = Convert.ToDecimal(s.Value);
+      nudSaturation.Value = Convert.ToDecimal(((TrackBar)sender).Value);
     }
 
-    private void numHue_ValueChanged(object sender, EventArgs e)
+    private void numSaturation_ValueChanged(object sender, EventArgs e)
     {
       var s = (NumericUpDown)sender;
-      var value = s.Value;
-
-      trackBarHue.Value = Convert.ToInt32(value);
-
+      var value = s.Value * -1;
+      tbSaturation.Value = Convert.ToInt32(s.Value);
       saturation = 1f - (Convert.ToInt32(value) / 100f);
     }
 
     private void trackBarIntensity_Scroll(object sender, EventArgs e)
     {
-      var s = (TrackBar)sender;
-      intensity = 1f - (s.Value / 100f);
-
-      Log.Debug("Intensity: {0}\n", intensity);
-
-      numIntensity.Value = Convert.ToDecimal(s.Value);
+      nudIntensity.Value = Convert.ToDecimal(((TrackBar)sender).Value);
     }
 
     private void numIntensity_ValueChanged(object sender, EventArgs e)
     {
       var s = (NumericUpDown)sender;
-      var value = s.Value;
-      trackBarIntensity.Value = Convert.ToInt32(value);
+      var value = s.Value * -1;
+      tbIntensity.Value = Convert.ToInt32(s.Value);
       intensity = 1f - (Convert.ToInt32(value) / 100f);
     }
 
     private void trackBarContrast_Scroll(object sender, EventArgs e)
     {
-      var s = (TrackBar)sender;
-      contrast = 1f - (s.Value / 100f);
-
-      Log.Debug("Contrast: {0}\n", contrast);
-
-      numContrast.Value = Convert.ToDecimal(s.Value);
+      nudContrast.Value = Convert.ToDecimal(((TrackBar)sender).Value);
     }
 
     private void numContrast_ValueChanged(object sender, EventArgs e)
     {
       var s = (NumericUpDown)sender;
-      var value = s.Value;
-      trackBarContrast.Value = Convert.ToInt32(value);
+      var value = s.Value * -1;
+      tbContrast.Value = Convert.ToInt32(s.Value);
       contrast = 1f - (Convert.ToInt32(value) / 100f);
     }
 
@@ -364,42 +361,66 @@ namespace ImgRescale
 
       var res = openFileDialog1.ShowDialog();
       if (res == System.Windows.Forms.DialogResult.OK) {
-        if (pictureBox1.Image != null)
-          pictureBox1.Image.Dispose();
+        btnPreview.Enabled = false;
+        BackgroundWorker bw = new BackgroundWorker();
+        bw.DoWork += new DoWorkEventHandler((xsender, xe) =>
+        {
+          if (pictureBox1.Image != null)
+            pictureBox1.Image.Dispose();
 
-        if (pictureBox2.Image != null)
-          pictureBox2.Image.Dispose();
+          if (pictureBox2.Image != null)
+            pictureBox2.Image.Dispose();
 
-        var fi = new FileInfo(openFileDialog1.FileNames[0]);
-        settings.lastPreviewDir = fi.DirectoryName;
-        settings.Save();
+          if (previewImg != null)
+            previewImg.Dispose();
 
-        Log.Debug("Load file: {0}\n", openFileDialog1.FileNames[0]);
-        previewPath = openFileDialog1.FileNames[0];
+          var fi = new FileInfo(openFileDialog1.FileNames[0]);
+          settings.lastPreviewDir = fi.DirectoryName;
+          settings.Save();
 
-        Bitmap img = new Bitmap(openFileDialog1.FileNames[0]);
-        Bitmap img2 = new Bitmap(openFileDialog1.FileNames[0]);
+          Log.Debug("Load file: {0}\n", openFileDialog1.FileNames[0]);
+          previewPath = openFileDialog1.FileNames[0];
+
+          Bitmap tmp = new Bitmap(previewPath);
+          int[] cst = Gfx.GetConstraints(tmp.Width, tmp.Height, PREVIEW_MAX_WIDTH, PREVIEW_MAX_WIDTH);
+          previewImg = Gfx.ScaleImage(tmp, cst[0], cst[1]);
+
+          Bitmap img = new Bitmap(previewImg);
+          Bitmap img2 = new Bitmap(previewImg);
+
+          tmp.Dispose();
         
-        pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
-        pictureBox1.Image = (System.Drawing.Image)img;
+          pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+          pictureBox1.Image = (System.Drawing.Image)img;
 
-        pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
-        pictureBox2.Image = (System.Drawing.Image)img2;
+          pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
+          pictureBox2.Image = (System.Drawing.Image)img2;
+        });
 
-        btnPreview.Enabled = true;
+        bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler((xsender, xe) =>
+        {
+          Log.Debug("Loaded Done\n");
+          btnPreview.Enabled = true;
+        });
+
+        Log.Debug("Loading image...");
+
+        bw.RunWorkerAsync();
       }
     }
 
     private void do_previewTransformation(object sender, EventArgs e)
     {
       Log.Debug("Do preview transformation!\n");
-      Bitmap tmp = new Bitmap(previewPath);
-      Bitmap img = Gfx.ApplyAttributes(tmp, iAttr);
-      tmp.Dispose();
-      pictureBox1.Image.Dispose();
-      pictureBox1.Image = (System.Drawing.Image)img;
-      iAttr.Dispose();
-      iAttr = null;
+      if (previewImg != null) {
+        Bitmap tmp = new Bitmap(previewImg);
+        Bitmap img = Gfx.ApplyAttributes(tmp, iAttr);
+        tmp.Dispose();
+        pictureBox1.Image.Dispose();
+        pictureBox1.Image = (System.Drawing.Image)img;
+        iAttr.Dispose();
+        iAttr = null;
+      }
     }
 
     private void on_previewWorkerComplete(object sender, EventArgs e)
@@ -412,34 +433,29 @@ namespace ImgRescale
     private void disableControls()
     {
       btnPreview.Enabled = false;
-      trackBarContrast.Enabled = false;
-      numContrast.Enabled = false;
 
-      trackBarHue.Enabled = false;
-      numHue.Enabled = false;
+      tbContrast.Enabled = false;
+      nudContrast.Enabled = false;
+
+      tbSaturation.Enabled = false;
+      nudSaturation.Enabled = false;
       
-      trackBarHue2.Enabled = false;
-      numHue2.Enabled = false;
-      
-      trackBarIntensity.Enabled = false;
-      numIntensity.Enabled = false;
+      tbIntensity.Enabled = false;
+      nudIntensity.Enabled = false;
     }
 
     private void enableControls()
     {
       btnPreview.Enabled = true;
 
-      trackBarContrast.Enabled = true;
-      numContrast.Enabled = true;
+      tbContrast.Enabled = true;
+      nudContrast.Enabled = true;
 
-      trackBarHue.Enabled = true;
-      numHue.Enabled = true;
+      tbSaturation.Enabled = true;
+      nudSaturation.Enabled = true;
 
-      trackBarHue2.Enabled = true;
-      numHue2.Enabled = true;
-
-      trackBarIntensity.Enabled = true;
-      numIntensity.Enabled = true;
+      tbIntensity.Enabled = true;
+      nudIntensity.Enabled = true;
     }
 
     private void btnPreview_Click(object sender, EventArgs e)
@@ -461,16 +477,18 @@ namespace ImgRescale
       settings.Save();
     }
 
-    private void avslutaToolStripMenuItem_Click(object sender, EventArgs e)
+    private void quitToolStripMenuItem_Click(object sender, EventArgs e)
     {
       this.Close();
       Application.Exit();
     }
 
-    private void inställningarToolStripMenuItem_Click(object sender, EventArgs e)
+    private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
     {
       var win = new SettingsWindow();
       win.ShowDialog(this);
+      Log.Debug("Settings window closed. Update values\n");
+      updateGlobalSettings();
     }
   }
 }
