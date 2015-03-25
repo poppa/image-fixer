@@ -79,8 +79,8 @@ namespace ImgRescale
     {
       defaultWidth = settings.imageMaxWidth;
       defaultHeight = settings.imageMaxHeight;
-      Image.MAX_WIDTH = defaultWidth;
-      Image.MAX_HEIGHT = defaultHeight;
+      Image.MaxWidth = defaultWidth;
+      Image.MaxHeight = defaultHeight;
     }
 
     public Dictionary<string,object> GetSettings()
@@ -168,9 +168,9 @@ namespace ImgRescale
         btnTargetDir.Text = @"C:\Users\ponost\Pictures\res";
 #endif
 
-      Image.MAX_WIDTH = defaultWidth;
-      Image.MAX_HEIGHT = defaultHeight;
-      Dir.recurse = defaultRecurse;
+      Image.MaxWidth = defaultWidth;
+      Image.MaxHeight = defaultHeight;
+      Dir.Recurse = defaultRecurse;
     }
 
     private void btnSrcDir_Click(object sender, EventArgs e)
@@ -222,12 +222,16 @@ namespace ImgRescale
     {
       Indexer id = Indexer.Get(btnSrcDir.Text);
 
-      Log.Debug("Got {0} images in {1} dirs\n", Image.instances, Dir.instances);
+      this.Invoke((MethodInvoker)delegate() {
+        statusText1.Text = "";
+      });
 
-      if (Image.instances > 0) {
-        //statusText2.Text = Image.instances + " bilder att behandla";
-        statusText2.Text = String.Format("Bearbetar bild {0}/{1}", 1, Image.instances);
-        id.run();
+      if (Image.Instances > 0) {
+        this.Invoke((MethodInvoker) delegate() {
+          statusText2.Text = String.Format("Bearbetar bild {0}/{1}", 1, Image.Instances);
+        });
+
+        id.Run();
       }
 
       ((Dir)id).Dispose();
@@ -303,22 +307,30 @@ namespace ImgRescale
     private void runApp()
     {
       if (!worker.IsBusy) {
-        Log.Debug("Saturation is: {0}\n", saturation);
-
         if (saturation != 1f || intensity != 1f || saturation != 1f) {
           setMatrix();
           Image.Attributes = iAttr;
         }
 
-        statusText2.Text = "Samlar bilder...";
+        statusText1.Text = "Samlar bilder...";
+
+        int nimg = 0;
+        Image.ImageCreated += () => {
+          nimg += 1;
+          this.Invoke((MethodInvoker)delegate() {
+            statusText2.Text = nimg.ToString();
+          });
+        };
 
         Indexer.TargetBaseDir = new System.IO.FileInfo(btnTargetDir.Text);
         Indexer.SourceBaseDir = new System.IO.FileInfo(btnSrcDir.Text);
 
         int count = 1;
-        Indexer.OnImageProcessed += () => {
+        Indexer.ImageProcessed += () => {
           count += 1;
-          statusText2.Text = String.Format("Bearbetar bild {0}/{1}", count, Image.instances);
+          this.Invoke((MethodInvoker)delegate() {
+            statusText2.Text = String.Format("Bearbetar bild {0}/{1}", count, Image.Instances);
+          });
         };
 
         worker.RunWorkerAsync();

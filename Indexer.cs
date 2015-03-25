@@ -6,7 +6,12 @@ using System.IO;
 
 namespace ImgRescale
 {
+  /// <summary>
+  /// Image is processed callback prototype
+  /// </summary>
   public delegate void ImageProcessedCallback();
+
+  public delegate void IndexingCompletedCallback();
 
   public abstract class Indexer
   {
@@ -16,10 +21,30 @@ namespace ImgRescale
     /// </summary>
     public static FileInfo TargetBaseDir = null;
 
+    /// <summary>
+    /// Source directory to scan for images
+    /// </summary>
     public static FileInfo SourceBaseDir = null;
 
-    public static ImageProcessedCallback OnImageProcessed;
+    /// <summary>
+    /// Callback to call when an image has been processed
+    /// </summary>
+    public static ImageProcessedCallback ImageProcessed;
 
+    /// <summary>
+    /// Number of instances
+    /// </summary>
+    public static int Instances
+    {
+      get { return instances; }
+      protected set { instances = value; }
+    }
+
+    protected static int instances = 0;
+
+    /// <summary>
+    /// Reset intances and other static fields
+    /// </summary>
     public static void Reset()
     {
       Image.instances = 0;
@@ -40,14 +65,25 @@ namespace ImgRescale
     /// </returns>
     public static Indexer Get(string path)
     {
+      return Get(path, null);
+    }
+
+    public static Indexer Get(string path, IndexingCompletedCallback callback)
+    {
       try {
         FileAttributes fa = System.IO.File.GetAttributes(path);
         if ((fa & FileAttributes.Directory) == FileAttributes.Directory) {
-          if (new DirectoryInfo(path).Exists)
-            return new Dir(path);
+          if (new DirectoryInfo(path).Exists) {
+            var d = new Dir(path);
+
+            if (callback != null)
+              callback();
+
+            return d;
+          }
         }
-        if (Image.is_allowed(path))
-          return new Image(null, path);
+        if (Image.IsAllowed(path))
+          return new Image(path);
       }
       catch (Exception e) {
         Log.File("Misslyckades att skapa en indexerare: {0}\n", e.Message);
@@ -95,8 +131,6 @@ namespace ImgRescale
     /// Either index a directory or process an image 
     /// </summary>
     /// <returns></returns>
-    public abstract bool run();
-
-    //public abstract bool run(ImageProcessedCallback callback);
+    public abstract bool Run();
   }
 }

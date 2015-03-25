@@ -15,23 +15,22 @@ namespace ImgRescale
     /// <summary>
     /// Do recursive scanning or not
     /// </summary>
-    public static bool recurse = false;
-    /// <summary>
-    /// Instance counter
-    /// </summary>
-    public static int instances = 0;
+    public static bool Recurse = false;
+
     /// <summary>
     /// The <see cref="DirectoryInfo"/> object of the dir.
     /// </summary>
-    public System.IO.DirectoryInfo directory { get; private set; }
+    public System.IO.DirectoryInfo Directory { get; private set; }
+
     /// <summary>
     /// List of images in this directory
     /// </summary>
-    public ArrayList files { get; private set; }
+    public ArrayList Files { get; private set; }
+
     /// <summary>
     /// List of sub directories
     /// </summary>
-    public ArrayList dirs { get; private set; }
+    public ArrayList Directories { get; private set; }
 
     /// <summary>
     /// Constructor
@@ -41,18 +40,18 @@ namespace ImgRescale
       : base()
     {
       instances++;
-      directory = new DirectoryInfo(path);
-      files = new ArrayList();
+      Directory = new DirectoryInfo(path);
+      Files = new ArrayList();
 
-      foreach (FileInfo fi in directory.GetFiles()) {
-        if (Image.is_allowed(fi.FullName))
-          files.Add(new Image(null, fi));
+      foreach (FileInfo fi in Directory.GetFiles()) {
+        if (Image.IsAllowed(fi.FullName))
+          Files.Add(new Image(fi));
       }
 
-      if (recurse) {
-        dirs = new ArrayList();
-        foreach (DirectoryInfo di in directory.GetDirectories()) {
-          dirs.Add(new Dir(di.FullName));
+      if (Recurse) {
+        Directories = new ArrayList();
+        foreach (DirectoryInfo di in Directory.GetDirectories()) {
+          Directories.Add(new Dir(di.FullName));
         }
       }
     }
@@ -61,33 +60,33 @@ namespace ImgRescale
     /// Process the images in this directory
     /// </summary>
     /// <returns></returns>
-    public override bool run()
+    public override bool Run()
     {
-      Log.Debug("Scannar mapp: {0}\n", directory.FullName);
-      if (files.Count == 0) {
+      Log.Debug("Scannar mapp: {0}\n", Directory.FullName);
+      if (Files.Count == 0) {
         Log.Debug("   - Inga bilder funna!\n");
         return false;
       }
 
-      foreach (Image file in files) {
-        file.run();
-        if (OnImageProcessed != null) {
-          OnImageProcessed();
+      foreach (Image file in Files) {
+        file.Run();
+        if (ImageProcessed != null) {
+          ImageProcessed();
         }
 
         file.Dispose();
       }
 
-      files.Clear();
+      Files.Clear();
 
-      if (recurse) {
-        foreach (Dir d in dirs) {
-          d.run();
+      if (Recurse) {
+        foreach (Dir d in Directories) {
+          d.Run();
           d.Dispose();
         }
       }
 
-      dirs.Clear();
+      Directories.Clear();
 
       return true;
     }
@@ -104,16 +103,16 @@ namespace ImgRescale
         return;
 
       if (disposing) {
-        Log.Debug("Dispose: {0}\n", directory.FullName);
-        files.Clear();
-        files = null;
+        Log.Debug("Dispose: {0}\n", Directory.FullName);
+        Files.Clear();
+        Files = null;
 
-        if (dirs != null) {
-          dirs.Clear();
-          dirs = null;
+        if (Directories != null) {
+          Directories.Clear();
+          Directories = null;
         }
 
-        directory = null;
+        Directory = null;
       }
 
       isDisposed = true;

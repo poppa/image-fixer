@@ -18,8 +18,9 @@ namespace ImgRescale
     {
       InitializeComponent();
 
-      nudMaxWidth.Value = Convert.ToDecimal(Properties.Settings.Default.imageMaxWidth);
-      nudMaxHeight.Value = Convert.ToDecimal(Properties.Settings.Default.imageMaxHeight);
+      nudMaxWidth.Value = Properties.Settings.Default.imageMaxWidth;
+      nudMaxHeight.Value = Properties.Settings.Default.imageMaxHeight;
+      nudJpegQuality.Value = Properties.Settings.Default.jpegQuality;
     }
 
     private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -111,8 +112,11 @@ namespace ImgRescale
     {
       var val1 = Convert.ToInt32(nudMaxWidth.Value);
       var val2 = Convert.ToInt32(nudMaxHeight.Value);
+      var val3 = Convert.ToInt32(nudJpegQuality.Value);
+
       Properties.Settings.Default.imageMaxWidth = val1;
       Properties.Settings.Default.imageMaxHeight = val2;
+      Properties.Settings.Default.jpegQuality = val3;
       Properties.Settings.Default.Save();
 
       if (cbConfig.SelectedIndex > -1) {

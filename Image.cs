@@ -9,41 +9,46 @@ using System.Drawing.Imaging;
 namespace ImgRescale
 {
   /// <summary>
-  /// Class that down-scales images
+  /// Class that manipulates images
   /// </summary>
   public class Image : Indexer, IDisposable
   {
     /// <summary>
-    /// Instance counter
-    /// </summary>
-    public static int instances = 0;
-    /// <summary>
     /// Max width for images
     /// </summary>
-    public static int MAX_WIDTH = 1024;
+    public static int MaxWidth = 1024;
+
     /// <summary>
     /// Max height for images
     /// </summary>
-    public static int MAX_HEIGHT = 1000;
+    public static int MaxHeight = 1000;
+
     /// <summary>
     /// Handled extensions
     /// </summary>
-    private static string[] ALLOWED_FILES = new string[]{
+    public static readonly string[] AllowedFiles = new string[]{
 			".jpg", ".jpeg", ".tif", ".tiff", ".gif", ".png", ".bmp"
 		};
 
+    /// <summary>
+    /// Attributes to apply to images
+    /// </summary>
     public static ImageAttributes Attributes = null;
 
     /// <summary>
-    /// Returns the mimetype for an extension and sets an 
-    /// <seealso cref="ImageFormat"/>
+    /// Callback for when an image object is created
+    /// </summary>
+    public static ImageProcessedCallback ImageCreated;
+
+    /// <summary>
+    /// Returns the mimetype for an extension.
     /// </summary>
     /// <param name="ext"></param>
     /// <param name="fmt"></param>
     /// <returns></returns>
-    public static string get_mimetype(string ext, out ImageFormat fmt)
+    public static string GetMimeTypeForExtension(string ext, out ImageFormat fmt)
     {
-      switch (ext) {
+      switch (ext.ToLower()) {
         case ".tif":
         case ".tiff":
           fmt = ImageFormat.Tiff;
@@ -69,13 +74,14 @@ namespace ImgRescale
 
     /// <summary>
     /// Checks if the extension <paramref name="s"/> exists in
-    /// <see cref="ALLOWED_FILES"/>
+    /// <see cref="AllowedFiles"/>
     /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
-    private static bool have_extension(string s)
+    private static bool isKnownExtension(string s)
     {
-      foreach (string ss in ALLOWED_FILES)
+      s = s.ToLower();
+      foreach (string ss in AllowedFiles)
         if (s == ss)
           return true;
       return false;
@@ -86,7 +92,7 @@ namespace ImgRescale
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    public static bool is_allowed(string path)
+    public static bool IsAllowed(string path)
     {
       FileInfo fi = new FileInfo(path);
       
@@ -97,7 +103,7 @@ namespace ImgRescale
         return false;
       }
 
-      if (!have_extension(fi.Extension.ToLower())) {
+      if (!isKnownExtension(fi.Extension)) {
         Log.Debug("NEJ! Inte en tillåten filtyp\n");
         return false;
       }
@@ -105,7 +111,7 @@ namespace ImgRescale
       try {
         if (Attributes == null) {
           System.Drawing.Image img = (System.Drawing.Image)(new Bitmap(path, true));
-          if (img.Width > MAX_WIDTH || img.Height > MAX_HEIGHT ||
+          if (img.Width > MaxWidth || img.Height > MaxHeight ||
               img.HorizontalResolution > 96.0 || img.VerticalResolution > 96.0) {
             Log.Debug("JA!\n");
             img.Dispose();
@@ -128,52 +134,44 @@ namespace ImgRescale
     /// <summary>
     /// The <seealso cref="FileInfo"/> object of the image
     /// </summary>
-    public System.IO.FileInfo file { get; private set; }
-
-    /// <summary>
-    /// The <see cref="System.Drawing.Image"/> object
-    /// </summary>
-    //public System.Drawing.Image image { get; private set; }
+    public System.IO.FileInfo File { get; private set; }
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="img"></param>
     /// <param name="path"></param>
-    public Image(System.Drawing.Image img, string path)
-      : base()
-    {
-      instances++;
-      file = new FileInfo(path);
-      //image = img;
-    }
+    public Image(string path) : this(new FileInfo(path)) {}
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="img"></param>
     /// <param name="path"></param>
-    public Image(System.Drawing.Image img, FileInfo path)
+    public Image(FileInfo path)
       : base()
     {
-      instances++;
-      file = path;
-      //image = img;
+      Instances++;
+      File = path;
+
+      if (ImageCreated != null) {
+        ImageCreated();
+      }
     }
 
     /// <summary>
     /// Processes the file
     /// </summary>
     /// <returns></returns>
-    public override bool run()
+    public override bool Run()
     {
       //if (image == null)
       System.Drawing.Image image;
-      image = (System.Drawing.Image)(new Bitmap(file.FullName, true));
+      image = (System.Drawing.Image)(new Bitmap(File.FullName, true));
 
-      Log.Debug("  * Bearbetar fil: {0}...", file.Name);
+      Log.Debug("  * Bearbetar fil: {0}...", File.Name);
 
-      string new_name = getNewName(file);
+      string new_name = getNewName(File);
 
       Log.Debug("nytt namn {0}...", new_name);
 
@@ -186,7 +184,7 @@ namespace ImgRescale
         }
       }
 
-      if (MAX_WIDTH == 0 && MAX_HEIGHT == 0) {
+      if (MaxWidth == 0 && MaxHeight == 0) {
         if (Attributes != null) {
           Bitmap nimg;
           using (nimg = Gfx.ApplyAttributes((Bitmap)image, Image.Attributes)) {
@@ -197,7 +195,7 @@ namespace ImgRescale
             eparams.Param[0] =
               new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, (long)95);
             ImageFormat fmt;
-            string mime = get_mimetype(nfi.Extension, out fmt);
+            string mime = GetMimeTypeForExtension(nfi.Extension, out fmt);
             ImageCodecInfo ici = Gfx.GetEncoderInfo(mime);
 
             try {
@@ -230,7 +228,7 @@ namespace ImgRescale
       else {
 
         int[] constraints = Gfx.GetConstraints(image.Width, image.Height,
-                                               MAX_WIDTH, MAX_HEIGHT);
+                                               MaxWidth, MaxHeight);
         Bitmap nimg;
         using (nimg = Gfx.ScaleImage((Bitmap)image, constraints[0],
                                             constraints[1])) {
@@ -245,7 +243,7 @@ namespace ImgRescale
           eparams.Param[0] =
             new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, (long)95);
           ImageFormat fmt;
-          string mime = get_mimetype(nfi.Extension, out fmt);
+          string mime = GetMimeTypeForExtension(nfi.Extension, out fmt);
           ImageCodecInfo ici = Gfx.GetEncoderInfo(mime);
 
           try {
@@ -297,7 +295,7 @@ namespace ImgRescale
           image = null;
         }
         */
-        file = null;
+        File = null;
       }
 
       isDisposed = true;
