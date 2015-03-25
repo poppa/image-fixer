@@ -9,7 +9,7 @@ using System.IO;
 namespace ImgRescale
 {
   [Serializable]
-  class Preset
+  public class Preset
   {
     public string Name = null;
     public int Saturation = 0;
@@ -18,6 +18,17 @@ namespace ImgRescale
     public string PreviewImage = null;
     public string SourceDir = null;
     public string DestinationDir = null;
+    protected bool isDefault = false;
+    public bool IsDefault
+    {
+      get { return isDefault; }
+      protected set { isDefault = value; }
+    }
+
+    public override string ToString()
+    {
+      return Name;
+    }
 
     public string GetSerializedString()
     {
@@ -29,6 +40,31 @@ namespace ImgRescale
       s.Close();
       ss.Close();
       return res;
+    }
+  }
+
+  [Serializable]
+  public class UserPreset : Preset
+  {
+    //protected new bool isDefault = false;
+    public UserPreset()
+    {
+      isDefault = false;
+    }
+  }
+
+  [Serializable]
+  public class DefaultPreset : Preset
+  {
+    //protected new bool isDefault = true;
+    public DefaultPreset()
+    {
+      isDefault = true;
+    }
+
+    public override string ToString()
+    {
+      return Name + " [standard]";
     }
   }
 }

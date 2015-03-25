@@ -35,6 +35,7 @@ namespace ImgRescale
     const float bwgt = 0.0820f;
 
     private ImageAttributes iAttr;
+    private Preset currentPreset;
 
     private BackgroundWorker worker = new BackgroundWorker();
     private BackgroundWorker previewWorker = new BackgroundWorker();
@@ -87,12 +88,53 @@ namespace ImgRescale
       return new Dictionary<string, object>() {
         { "saturation", this.nudSaturation.Value },
         { "contrast", this.nudContrast.Value },
-        { "brightness", this.nudIntensity.Value },
+        { "intensity", this.nudIntensity.Value },
         { "lastSourceDir", this.btnSrcDir.Text },
         { "lastTargetDir", this.btnTargetDir.Text },
         { "previewPath", this.previewPath }
       };
     }
+
+    public ArrayList GetDeafaultPresets()
+    {
+      ArrayList al = new ArrayList();
+      var p1 = new DefaultPreset();
+      p1.Name = "Cumulusmoln";
+      p1.Intensity = -7;
+      p1.Saturation = 15;
+      p1.Contrast = 12;
+
+      al.Add(p1);
+
+      var p2 = new DefaultPreset();
+      p2.Name = "Lätt skymning, halvklart";
+      p2.Intensity = -3;
+      p2.Saturation = 17;
+      p2.Contrast = 14;
+
+      al.Add(p2);
+      
+      return al;
+    }
+
+    public void LoadPreset(Preset ps)
+    {
+      nudContrast.Value = ps.Contrast;
+      nudIntensity.Value = ps.Intensity;
+      nudSaturation.Value = ps.Saturation;
+
+      if (!ps.IsDefault) {
+        Log.Debug("Set folder and stuff!\n");
+      }
+
+      currentPreset = ps;
+    }
+
+    public Preset CurrentPreset
+    {
+      get { return currentPreset; }
+      private set { currentPreset = value; }
+    } 
 
     private void Form1_Load(object sender, EventArgs e)
     {

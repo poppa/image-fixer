@@ -39,6 +39,7 @@
       this.nudMaxHeight = new System.Windows.Forms.NumericUpDown();
       this.richTextBox1 = new System.Windows.Forms.RichTextBox();
       this.btnOk = new System.Windows.Forms.Button();
+      this.btnCancel = new System.Windows.Forms.Button();
       this.groupBox1.SuspendLayout();
       this.tableLayoutPanel1.SuspendLayout();
       this.groupBox2.SuspendLayout();
@@ -77,11 +78,10 @@
       // 
       // cbConfig
       // 
-      this.cbConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+      this.cbConfig.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
       this.cbConfig.FormattingEnabled = true;
       this.cbConfig.ItemHeight = 13;
-      this.cbConfig.Location = new System.Drawing.Point(2, 2);
+      this.cbConfig.Location = new System.Drawing.Point(2, 3);
       this.cbConfig.Margin = new System.Windows.Forms.Padding(2);
       this.cbConfig.Name = "cbConfig";
       this.cbConfig.Size = new System.Drawing.Size(281, 21);
@@ -92,13 +92,12 @@
       // 
       // btnSave
       // 
-      this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+      this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
       this.btnSave.Enabled = false;
       this.btnSave.Location = new System.Drawing.Point(287, 2);
       this.btnSave.Margin = new System.Windows.Forms.Padding(2);
       this.btnSave.Name = "btnSave";
-      this.btnSave.Size = new System.Drawing.Size(91, 21);
+      this.btnSave.Size = new System.Drawing.Size(91, 23);
       this.btnSave.TabIndex = 1;
       this.btnSave.Text = "Spara";
       this.btnSave.UseVisualStyleBackColor = true;
@@ -106,19 +105,21 @@
       // 
       // btnDelete
       // 
-      this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+      this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
       this.btnDelete.Enabled = false;
       this.btnDelete.Location = new System.Drawing.Point(382, 2);
       this.btnDelete.Margin = new System.Windows.Forms.Padding(2);
       this.btnDelete.Name = "btnDelete";
-      this.btnDelete.Size = new System.Drawing.Size(91, 21);
+      this.btnDelete.Size = new System.Drawing.Size(91, 23);
       this.btnDelete.TabIndex = 2;
       this.btnDelete.Text = "Ta bort";
       this.btnDelete.UseVisualStyleBackColor = true;
       // 
       // groupBox2
       // 
+      this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.groupBox2.Controls.Add(this.richTextBox1);
       this.groupBox2.Controls.Add(this.nudMaxHeight);
       this.groupBox2.Controls.Add(this.label2);
@@ -142,7 +143,6 @@
       this.nudMaxWidth.Name = "nudMaxWidth";
       this.nudMaxWidth.Size = new System.Drawing.Size(120, 20);
       this.nudMaxWidth.TabIndex = 0;
-      this.nudMaxWidth.ValueChanged += new System.EventHandler(this.nudMaxWidth_ValueChanged);
       // 
       // label1
       // 
@@ -173,7 +173,6 @@
       this.nudMaxHeight.Name = "nudMaxHeight";
       this.nudMaxHeight.Size = new System.Drawing.Size(120, 20);
       this.nudMaxHeight.TabIndex = 3;
-      this.nudMaxHeight.ValueChanged += new System.EventHandler(this.nudMaxHeight_ValueChanged);
       // 
       // richTextBox1
       // 
@@ -189,8 +188,9 @@
       // 
       // btnOk
       // 
+      this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
       this.btnOk.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-      this.btnOk.Location = new System.Drawing.Point(418, 256);
+      this.btnOk.Location = new System.Drawing.Point(338, 256);
       this.btnOk.Name = "btnOk";
       this.btnOk.Size = new System.Drawing.Size(75, 33);
       this.btnOk.TabIndex = 2;
@@ -198,12 +198,24 @@
       this.btnOk.UseVisualStyleBackColor = true;
       this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
       // 
+      // btnCancel
+      // 
+      this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+      this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+      this.btnCancel.Location = new System.Drawing.Point(419, 256);
+      this.btnCancel.Name = "btnCancel";
+      this.btnCancel.Size = new System.Drawing.Size(75, 33);
+      this.btnCancel.TabIndex = 3;
+      this.btnCancel.Text = "Avbryt";
+      this.btnCancel.UseVisualStyleBackColor = true;
+      // 
       // SettingsWindow
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.CancelButton = this.btnOk;
+      this.CancelButton = this.btnCancel;
       this.ClientSize = new System.Drawing.Size(503, 295);
+      this.Controls.Add(this.btnCancel);
       this.Controls.Add(this.btnOk);
       this.Controls.Add(this.groupBox2);
       this.Controls.Add(this.groupBox1);
@@ -218,6 +230,7 @@
       this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
       this.Text = "Inställningar";
       this.TopMost = true;
+      this.Shown += new System.EventHandler(this.SettingsWindow_Shown);
       this.groupBox1.ResumeLayout(false);
       this.tableLayoutPanel1.ResumeLayout(false);
       this.groupBox2.ResumeLayout(false);
@@ -242,5 +255,6 @@
     private System.Windows.Forms.NumericUpDown nudMaxHeight;
     private System.Windows.Forms.RichTextBox richTextBox1;
     private System.Windows.Forms.Button btnOk;
+    private System.Windows.Forms.Button btnCancel;
   }
 }
