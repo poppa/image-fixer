@@ -33,13 +33,18 @@ namespace ImgRescale
     public ArrayList Directories { get; private set; }
 
     /// <summary>
+    /// Number of instances
+    /// </summary>
+    public static int Instances = 0;
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="path"></param>
     public Dir(string path)
       : base()
     {
-      instances++;
+      Dir.Instances++;
       Directory = new DirectoryInfo(path);
       Files = new ArrayList();
 

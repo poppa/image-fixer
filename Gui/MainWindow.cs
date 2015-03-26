@@ -41,6 +41,9 @@ namespace ImgRescale
     private BackgroundWorker previewWorker = new BackgroundWorker();
     Properties.Settings settings = Properties.Settings.Default;
 
+    List<Preset> realPresets = new List<Preset>();
+    List<string> presetModel = new List<string>();
+
     public MainWindow()
     {
       InitializeComponent();
@@ -72,6 +75,9 @@ namespace ImgRescale
         this.WindowState = FormWindowState.Maximized;
       }
 
+      cbPresets.DataSource = presetModel;
+
+      initPresets();
       updateGlobalSettings();
     }
 
@@ -95,37 +101,11 @@ namespace ImgRescale
       };
     }
 
-    public ArrayList GetDeafaultPresets()
-    {
-      ArrayList al = new ArrayList();
-      var p1 = new DefaultPreset();
-      p1.Name = "Cumulusmoln";
-      p1.Intensity = -7;
-      p1.Saturation = 15;
-      p1.Contrast = 12;
-
-      al.Add(p1);
-
-      var p2 = new DefaultPreset();
-      p2.Name = "Lätt skymning, halvklart";
-      p2.Intensity = -3;
-      p2.Saturation = 17;
-      p2.Contrast = 14;
-
-      al.Add(p2);
-      
-      return al;
-    }
-
     public void LoadPreset(Preset ps)
     {
       nudContrast.Value = ps.Contrast;
       nudIntensity.Value = ps.Intensity;
       nudSaturation.Value = ps.Saturation;
-
-      if (!ps.IsDefault) {
-        Log.Debug("Set folder and stuff!\n");
-      }
 
       currentPreset = ps;
     }
@@ -134,7 +114,51 @@ namespace ImgRescale
     {
       get { return currentPreset; }
       private set { currentPreset = value; }
-    } 
+    }
+
+    private void loadPresets()
+    {
+      loadPresets(null);
+    }
+
+    private void initPresets()
+    {
+      var presets = SerializedArray.Deserialize(settings.presets);
+
+      if (presets == null)
+        return;
+
+      foreach (var item in presets) {
+        var ps = (Preset)item;
+        realPresets.Add(ps);
+        presetModel.Add(ps.Name);
+      }
+
+      Log.Debug("Preset model length: {0}\n", presetModel.Count);
+    }
+
+    private void loadPresets(string name)
+    {
+      var presets = SerializedArray.Deserialize(settings.presets);
+      
+      if (presets == null)
+        return;
+
+      if (presets.Count > 0) {
+        Preset ps = (Preset)presets[0];
+        Log.Debug("Load presets: {0} > {1}\n", presets.Count, ps.Name);
+      }
+
+
+
+      var items = cbPresets.Items;
+      
+      if (items.Count > 0)
+        cbPresets.Items.Clear();
+
+
+
+    }
 
     private void Form1_Load(object sender, EventArgs e)
     {
@@ -543,6 +567,19 @@ namespace ImgRescale
       win.ShowDialog(this);
       Log.Debug("Settings window closed. Update values\n");
       updateGlobalSettings();
+    }
+
+    private void btnSavePreset_Click(object sender, EventArgs e)
+    {
+      var w = new SavePreset();
+      var res = w.ShowDialog(this);
+
+      Log.Debug("Res: {0}\n", res);
+
+      if (res == System.Windows.Forms.DialogResult.OK) {
+        Log.Debug("Update preset list\n");
+        loadPresets();
+      }
     }
   }
 }

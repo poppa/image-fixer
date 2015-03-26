@@ -8,7 +8,7 @@
     <Setting Name="lastDestDir" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="configs" Type="System.Collections.ArrayList" Scope="User">
+    <Setting Name="presets" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="winWidth" Type="System.Int32" Scope="User">

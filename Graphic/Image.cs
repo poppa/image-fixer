@@ -120,6 +120,7 @@ namespace ImgRescale
           }
         }
         else {
+          Log.Debug("JA!\n");
           return true;
         }
         Log.Debug("NEJ! Inte nödvändigt.\n");
@@ -143,6 +144,12 @@ namespace ImgRescale
     /// <param name="path"></param>
     public Image(string path) : this(new FileInfo(path)) {}
 
+
+    /// <summary>
+    /// Number of instances
+    /// </summary>
+    public static int Instances = 0;
+
     /// <summary>
     /// Constructor
     /// </summary>
@@ -151,7 +158,7 @@ namespace ImgRescale
     public Image(FileInfo path)
       : base()
     {
-      Instances++;
+      Instances += 1;
       File = path;
 
       if (ImageCreated != null) {
@@ -172,8 +179,6 @@ namespace ImgRescale
       Log.Debug("  * Bearbetar fil: {0}...", File.Name);
 
       string new_name = getNewName(File);
-
-      Log.Debug("nytt namn {0}...", new_name);
 
       FileInfo nfi = new FileInfo(new_name);
       if (nfi.Exists) {
@@ -226,7 +231,6 @@ namespace ImgRescale
         }
       }
       else {
-
         int[] constraints = Gfx.GetConstraints(image.Width, image.Height,
                                                MaxWidth, MaxHeight);
         Bitmap nimg;

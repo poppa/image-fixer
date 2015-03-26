@@ -55,7 +55,6 @@ namespace ImgRescale
 
     public static Bitmap ApplyAttributes(Bitmap img, ImageAttributes attr)
     {
-      Log.Debug("Apply ImageAttributes\n");
       Bitmap bmp = new Bitmap(img.Width, img.Height);
       Graphics g = Graphics.FromImage(bmp);
       g.DrawImage(img, new Rectangle(0, 0, img.Width, img.Height), 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, attr);

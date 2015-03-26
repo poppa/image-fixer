@@ -32,23 +32,12 @@ namespace ImgRescale
     public static ImageProcessedCallback ImageProcessed;
 
     /// <summary>
-    /// Number of instances
-    /// </summary>
-    public static int Instances
-    {
-      get { return instances; }
-      protected set { instances = value; }
-    }
-
-    protected static int instances = 0;
-
-    /// <summary>
     /// Reset intances and other static fields
     /// </summary>
     public static void Reset()
     {
-      Image.instances = 0;
-      Dir.instances = 0;
+      Image.Instances = 0;
+      Dir.Instances = 0;
       Image.Attributes = null;
     }
 
