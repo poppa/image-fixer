@@ -71,8 +71,8 @@
       this.tableLayoutPanel10 = new System.Windows.Forms.TableLayoutPanel();
       this.label3 = new System.Windows.Forms.Label();
       this.nudContrast = new System.Windows.Forms.NumericUpDown();
-      this.cbPresetBinding = new System.Windows.Forms.BindingSource(this.components);
       this.lineSeparator1 = new ImgRescale.LineSeparator();
+      this.cbPresetBinding = new System.Windows.Forms.BindingSource(this.components);
       this.groupBox1.SuspendLayout();
       this.groupBox2.SuspendLayout();
       this.statusStrip1.SuspendLayout();

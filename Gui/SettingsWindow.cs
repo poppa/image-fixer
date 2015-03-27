@@ -23,75 +23,6 @@ namespace ImgRescale
       nudJpegQuality.Value = Properties.Settings.Default.jpegQuality;
     }
 
-    private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-    {
-      /*
-      Log.Debug("Combobox index changed...\n");
-
-      var cb = (ComboBox)sender;
-      var idx = cb.SelectedIndex;
-      var item = cb.SelectedItem;
-
-      if (idx > -1) {
-        var obj = (Preset)item;
-        currentPreset = obj;
-
-        Log.Debug("   {0} is default?: {1}\n", obj.Name, obj.IsDefault);
-
-        if (obj.IsDefault) {
-          btnSave.Enabled = false;         
-        }
-        else {
-          btnSave.Enabled = true;
-        }
-      }
-      else {
-        Log.Debug("   Changed index is -1\n");
-      }
-      */
-    }
-
-    private void cbConfig_SelectedValueChanged(object sender, EventArgs e)
-    {
-      Log.Debug("Combobox selected value changed...\n");
-    }
-
-    private void cbConfig_TextChanged(object sender, EventArgs e)
-    {
-      /*
-      var cb = (ComboBox)sender;
-      var idx = cb.SelectedIndex;
-      var item = cb.SelectedItem;
-      var tlen = cb.Text.Trim().Length;
-
-      Log.Debug("Combobox text changed at index {0} : {2}...\n",
-         idx, cb.Text);
-
-      if (currentPreset != null && currentPreset.IsDefault) {
-        return;
-      }
-
-      if (idx > -1) {
-        var obj = (Preset)item;
-
-        Log.Debug("Obj: {0} : {1}\n", obj.Name, obj.Saturation);
-
-        if (obj.IsDefault) {
-          btnSave.Enabled = false;
-          btnDelete.Enabled = false;
-          return;
-        }
-        else {
-          btnSave.Enabled = tlen > 0;
-          btnDelete.Enabled = true;
-        }
-      }
-      else {
-        btnSave.Enabled = tlen > 0;
-      }
-       */
-    }
-
     private void btnSave_Click(object sender, EventArgs e)
     {
       /*
@@ -125,13 +56,6 @@ namespace ImgRescale
       Properties.Settings.Default.jpegQuality = val3;
       Properties.Settings.Default.Save();
 
-      /*
-      if (cbConfig.SelectedIndex > -1) {
-        var item = cbConfig.SelectedItem;
-        parentInstance().LoadPreset((Preset)item);
-      }
-       */
-
       this.Close();
     }
 
@@ -139,32 +63,19 @@ namespace ImgRescale
     {
       MainWindow pw = parentInstance();
       if (pw != null) {
-        /*
-        ArrayList dp = pw.GetDeafaultPresets();
-        foreach (object ps in dp) {
-          cbConfig.Items.Add((DefaultPreset)ps);
-        }
-
-        Preset curp = pw.CurrentPreset;
-
-        if (curp != null) {
-          int i = 0;
-          foreach (var item in cbConfig.Items) {
-            Preset p = (Preset)item;
-            if (p.Name == curp.Name) {
-              Log.Debug("Select: {0}\n", p.Name);
-              cbConfig.SelectedIndex = i;
-              break;
-            }
-
-            i++;
-          }
-        }
-        **/
+        cbPresetsBinding.DataSource = pw.Presets;
+        cbPresets.DataSource = cbPresetsBinding;
+        cbPresets.DisplayMember = "Name";
       }
       else {
         Log.Debug("Owner window is null!\n");
       }
+    }
+
+    private void cbPresets_SelectedIndexChanged(object sender, EventArgs e)
+    {
+      btnEditPreset.Enabled = cbPresets.SelectedIndex > 0;
+      btnDeletePreset.Enabled = cbPresets.SelectedIndex > 0;
     }
   }
 }

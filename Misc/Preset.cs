@@ -11,68 +11,44 @@ namespace ImgRescale
 {
   public static class MySerializer
   {
-    public static string Serialize(object obj)
+    public static string Serialize(object o)
     {
       string ret = null;
-      IFormatter f = new BinaryFormatter();
-      using (Stream s = new MemoryStream()) {
-        f.Serialize(s, obj);
-        s.Position = 0;
-
-        using (StreamReader sr = new StreamReader(s)) {
-          ret = sr.ReadToEnd();
-        }
-      }
-
-      return ret;
-    }
-
-    public static object Deserialize(string s)
-    {
-      if (string.IsNullOrEmpty(s)) return null;
-      object ret = null;
       try {
-        IFormatter f = new BinaryFormatter();
-        using (Stream ms = new MemoryStream(System.Text.Encoding.Default.GetBytes(s))) {
-          ret = f.Deserialize(ms);
+        var x = new XmlSerializer(o.GetType());
+        using (Stream s = new MemoryStream()) {
+          x.Serialize(s, o);
+          s.Position = 0;
+          using (StreamReader r = new StreamReader(s)) {
+            ret = r.ReadToEnd();
+          }
         }
       }
       catch (Exception e) {
-        Log.Win("Unable to deserialize string\n");
+        Console.Error.Write("Unable to serialize object {0}: {1}\n", o.GetType(), e.Message); 
       }
 
       return ret;
     }
 
-    public static string SerializeXML(object o)
-    {
-      string ret = null;
-      var x = new XmlSerializer(o.GetType());
-      using (Stream s = new MemoryStream()) {
-        x.Serialize(s, o);
-        s.Position = 0;
-        using (StreamReader r = new StreamReader(s)) {
-          ret = r.ReadToEnd();
-        }
-      }
-
-      return ret;
-    }
-
-    public static object DeserializeXML(string xml, Type t)
+    public static object Deserialize(string xml, Type t)
     {
       if (string.IsNullOrEmpty(xml))
         return null;
 
       object ret = null;
-      var x = new XmlSerializer(t);
-      using (Stream s = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))) {
-        ret = x.Deserialize(s);
+      try {
+        var x = new XmlSerializer(t);
+        using (Stream s = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))) {
+          ret = x.Deserialize(s);
+        }
+      }
+      catch (Exception e) {
+        Console.Error.Write("Unable to deserialize XML: {0}\nError: {1}\n", xml, e.Message); 
       }
 
       return ret;
     }
-
   }
 
   [XmlRootAttribute("Presets")]
@@ -80,12 +56,12 @@ namespace ImgRescale
   {
     public override string ToString()
     {
-      return MySerializer.SerializeXML(this);
+      return MySerializer.Serialize(this);
     }
 
     public static PresetsList ToObject(string xml)
     {
-      return (PresetsList)MySerializer.DeserializeXML(xml, typeof(PresetsList));
+      return (PresetsList)MySerializer.Deserialize(xml, typeof(PresetsList));
     }
   }
 
@@ -106,13 +82,13 @@ namespace ImgRescale
 
     public string ToXml()
     {
-      return MySerializer.SerializeXML(this);
+      return MySerializer.Serialize(this);
     }
 
     public static Preset Deserialize(string s)
     {
       if (string.IsNullOrEmpty(s)) return null;
-      return (Preset) MySerializer.DeserializeXML(s, typeof(Preset));
+      return (Preset) MySerializer.Deserialize(s, typeof(Preset));
     }
 
     public void Save()

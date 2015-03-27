@@ -35,13 +35,13 @@ namespace ImgRescale
     const float bwgt = 0.0820f;
 
     private ImageAttributes iAttr;
+    public PresetsList Presets { get { return presets; } }
+    private PresetsList presets;
     private Preset currentPreset;
 
     private BackgroundWorker worker = new BackgroundWorker();
     private BackgroundWorker previewWorker = new BackgroundWorker();
     Properties.Settings settings = Properties.Settings.Default;
-
-    List<Preset> realPresets = new List<Preset>();
 
     public MainWindow()
     {
@@ -80,12 +80,14 @@ namespace ImgRescale
         DestinationDir = settings.lastDestDir
       };
 
-      PresetsList psl = new PresetsList();
-      psl.Add(defaultPreset);
+      if (!string.IsNullOrEmpty(settings.presets)) {
+        presets = PresetsList.ToObject(settings.presets);
+      }
 
-      realPresets.Add(defaultPreset);
+      if (presets == null)
+        presets = new PresetsList();
 
-      //Properties.Settings.Default.presets = null;
+      presets.Insert(0, defaultPreset);
 
       initPresets();
       updateGlobalSettings();
@@ -121,14 +123,18 @@ namespace ImgRescale
 
       if (!string.IsNullOrEmpty(ps.SourceDir)) {
         DirectoryInfo dir = new DirectoryInfo(ps.SourceDir);
-        if (dir.Exists)
+        if (dir.Exists) {
           fbdSource.SelectedPath = ps.SourceDir;
+          btnSrcDir.Text = ps.SourceDir;
+        }
       }
 
       if (!string.IsNullOrEmpty(ps.DestinationDir)) {
         DirectoryInfo dir = new DirectoryInfo(ps.DestinationDir);
-        if (dir.Exists)
+        if (dir.Exists) {
           fbdTarget.SelectedPath = ps.DestinationDir;
+          btnTargetDir.Text = ps.DestinationDir;
+        }
       }
 
       if (!string.IsNullOrEmpty(ps.PreviewImage)) {
@@ -155,24 +161,11 @@ namespace ImgRescale
     private void initPresets()
     {
       Log.Debug("initPresets: {0}\n", settings.presets);
-      var presets = PresetsList.ToObject(settings.presets);
-
-      if (presets != null) {
-        foreach (var item in presets) {
-          var ps = (Preset)item;
-          realPresets.Add(ps);
-        }
-      }
-
-      cbPresetBinding.DataSource = realPresets;
+      cbPresetBinding.DataSource = presets;
       cbPresets.DataSource = cbPresetBinding;
       cbPresets.DisplayMember = "Name";
 
-      foreach (var item in realPresets) {
-        Log.Debug("Item: {0}\n", item.Name);
-      }
-
-      Log.Debug("Preset model length: {0}\n", realPresets.Count);
+      Log.Debug("Preset model length: {0}\n", presets.Count);
     }
 
     private void loadPresets(string name)
@@ -202,9 +195,6 @@ namespace ImgRescale
 
       if (!string.IsNullOrEmpty(td))
         fbdTarget.SelectedPath = td;
-
-      //Log.Debug("Source dir: {0}\n", sd);
-      //Log.Debug("Target dir: {0}\n", td);
 
       if (!string.IsNullOrEmpty(sd))
         btnSrcDir.Text = sd;

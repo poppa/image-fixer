@@ -38,8 +38,6 @@ namespace ImgRescale
 
     private void btnSave_Click(object sender, EventArgs e)
     {
-      Log.Debug("Save this shit!\n");
-
       var intensity = Convert.ToInt32(currentSettings["intensity"]);
       var contrast = Convert.ToInt32(currentSettings["contrast"]);
       var saturation = Convert.ToInt32(currentSettings["saturation"]);
@@ -51,14 +49,15 @@ namespace ImgRescale
       if (currentSettings["lastTargetDir"] != null) 
         targetDir = currentSettings["lastTargetDir"].ToString();
 
-      Preset ps = new Preset();
-      ps.Name = tbName.Text.Trim();
-      ps.PreviewImage = preview;
-      ps.DestinationDir = targetDir;
-      ps.SourceDir = sourceDir;
-      ps.Saturation = saturation;
-      ps.Contrast = contrast;
-      ps.Intensity = intensity;
+      Preset ps = new Preset {
+        Name = tbName.Text.Trim(),
+        PreviewImage = preview,
+        DestinationDir = targetDir,
+        SourceDir = sourceDir,
+        Saturation = saturation,
+        Contrast = contrast,
+        Intensity = intensity
+      };
 
       ps.Save();
 
