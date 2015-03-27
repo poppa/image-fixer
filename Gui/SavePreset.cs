@@ -60,8 +60,8 @@ namespace ImgRescale
       };
 
       ps.Save();
-
       Properties.Settings.Default.Save();
+      ((MainWindow)Owner).Presets.Add(ps);
 
       this.Close();
     }
