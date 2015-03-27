@@ -5,6 +5,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Xml.Serialization;
 
 namespace ImgRescale
 {
@@ -42,54 +43,87 @@ namespace ImgRescale
 
       return ret;
     }
+
+    public static string SerializeXML(object o)
+    {
+      string ret = null;
+      var x = new XmlSerializer(o.GetType());
+      using (Stream s = new MemoryStream()) {
+        x.Serialize(s, o);
+        s.Position = 0;
+        using (StreamReader r = new StreamReader(s)) {
+          ret = r.ReadToEnd();
+        }
+      }
+
+      return ret;
+    }
+
+    public static object DeserializeXML(string xml, Type t)
+    {
+      if (string.IsNullOrEmpty(xml))
+        return null;
+
+      object ret = null;
+      var x = new XmlSerializer(t);
+      using (Stream s = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))) {
+        ret = x.Deserialize(s);
+      }
+
+      return ret;
+    }
+
   }
 
-  [Serializable]
-  public class SerializedArray : System.Collections.ArrayList
+  [XmlRootAttribute("Presets")]
+  public class PresetsList : List<Preset>
   {
     public override string ToString()
     {
-      return MySerializer.Serialize(this);
+      return MySerializer.SerializeXML(this);
     }
 
-    public static SerializedArray Deserialize(string s)
+    public static PresetsList ToObject(string xml)
     {
-      if (string.IsNullOrEmpty(s)) return null;
-      return (SerializedArray)MySerializer.Deserialize(s);
+      return (PresetsList)MySerializer.DeserializeXML(xml, typeof(PresetsList));
     }
   }
 
-  [Serializable]
   public class Preset
   {
-    public string Name = null;
-    public int Saturation = 0;
-    public int Intensity = 0;
-    public int Contrast = 0;
-    public string PreviewImage = null;
-    public string SourceDir = null;
-    public string DestinationDir = null;
+    public string Name { get; set; }
+    public int Saturation { get; set; }
+    public int Intensity { get; set; }
+    public int Contrast { get; set; }
+    public string PreviewImage { get; set; }
+    public string SourceDir { get; set; }
+    public string DestinationDir { get; set; }
 
     public override string ToString()
     {
-      return MySerializer.Serialize(this);
+      return Name;
+    }
+
+    public string ToXml()
+    {
+      return MySerializer.SerializeXML(this);
     }
 
     public static Preset Deserialize(string s)
     {
       if (string.IsNullOrEmpty(s)) return null;
-      return (Preset) MySerializer.Deserialize(s);
+      return (Preset) MySerializer.DeserializeXML(s, typeof(Preset));
     }
 
     public void Save()
     {
-      SerializedArray a;
+      PresetsList a;
       var s = Properties.Settings.Default.presets;
       if (!string.IsNullOrEmpty(s)) {
-        a = SerializedArray.Deserialize(s);
+        a = PresetsList.ToObject(s);
       }
       else {
-        a = new SerializedArray();
+        a = new PresetsList();
       }
 
       if (a.Count == 0) {

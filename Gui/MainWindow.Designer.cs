@@ -27,6 +27,7 @@
     /// </summary>
     private void InitializeComponent()
     {
+      this.components = new System.ComponentModel.Container();
       this.groupBox1 = new System.Windows.Forms.GroupBox();
       this.btnSrcDir = new System.Windows.Forms.Button();
       this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -70,6 +71,7 @@
       this.tableLayoutPanel10 = new System.Windows.Forms.TableLayoutPanel();
       this.label3 = new System.Windows.Forms.Label();
       this.nudContrast = new System.Windows.Forms.NumericUpDown();
+      this.cbPresetBinding = new System.Windows.Forms.BindingSource(this.components);
       this.lineSeparator1 = new ImgRescale.LineSeparator();
       this.groupBox1.SuspendLayout();
       this.groupBox2.SuspendLayout();
@@ -94,6 +96,7 @@
       ((System.ComponentModel.ISupportInitialize)(this.tbIntensity)).BeginInit();
       this.tableLayoutPanel10.SuspendLayout();
       ((System.ComponentModel.ISupportInitialize)(this.nudContrast)).BeginInit();
+      ((System.ComponentModel.ISupportInitialize)(this.cbPresetBinding)).BeginInit();
       this.SuspendLayout();
       // 
       // groupBox1
@@ -400,8 +403,9 @@
       this.cbPresets.Location = new System.Drawing.Point(0, 4);
       this.cbPresets.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
       this.cbPresets.Name = "cbPresets";
-      this.cbPresets.Size = new System.Drawing.Size(121, 21);
+      this.cbPresets.Size = new System.Drawing.Size(281, 21);
       this.cbPresets.TabIndex = 0;
+      this.cbPresets.SelectedIndexChanged += new System.EventHandler(this.cbPresets_SelectedIndexChanged);
       // 
       // btnSavePreset
       // 
@@ -666,6 +670,7 @@
       this.tableLayoutPanel10.ResumeLayout(false);
       this.tableLayoutPanel10.PerformLayout();
       ((System.ComponentModel.ISupportInitialize)(this.nudContrast)).EndInit();
+      ((System.ComponentModel.ISupportInitialize)(this.cbPresetBinding)).EndInit();
       this.ResumeLayout(false);
       this.PerformLayout();
 
@@ -717,6 +722,7 @@
     private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
     private System.Windows.Forms.ComboBox cbPresets;
     private System.Windows.Forms.Button btnSavePreset;
+    private System.Windows.Forms.BindingSource cbPresetBinding;
   }
 }
 

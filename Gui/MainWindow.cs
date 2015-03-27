@@ -42,7 +42,6 @@ namespace ImgRescale
     Properties.Settings settings = Properties.Settings.Default;
 
     List<Preset> realPresets = new List<Preset>();
-    List<string> presetModel = new List<string>();
 
     public MainWindow()
     {
@@ -75,7 +74,18 @@ namespace ImgRescale
         this.WindowState = FormWindowState.Maximized;
       }
 
-      cbPresets.DataSource = presetModel;
+      var defaultPreset = new Preset { 
+        Name = "Välj...",
+        SourceDir = settings.lastSrcDir,
+        DestinationDir = settings.lastDestDir
+      };
+
+      PresetsList psl = new PresetsList();
+      psl.Add(defaultPreset);
+
+      realPresets.Add(defaultPreset);
+
+      //Properties.Settings.Default.presets = null;
 
       initPresets();
       updateGlobalSettings();
@@ -103,9 +113,30 @@ namespace ImgRescale
 
     public void LoadPreset(Preset ps)
     {
+      Log.Debug("Woot: {0}, {1}, {2}\n", ps.Intensity, ps.Saturation, ps.Contrast);
+
       nudContrast.Value = ps.Contrast;
       nudIntensity.Value = ps.Intensity;
       nudSaturation.Value = ps.Saturation;
+
+      if (!string.IsNullOrEmpty(ps.SourceDir)) {
+        DirectoryInfo dir = new DirectoryInfo(ps.SourceDir);
+        if (dir.Exists)
+          fbdSource.SelectedPath = ps.SourceDir;
+      }
+
+      if (!string.IsNullOrEmpty(ps.DestinationDir)) {
+        DirectoryInfo dir = new DirectoryInfo(ps.DestinationDir);
+        if (dir.Exists)
+          fbdTarget.SelectedPath = ps.DestinationDir;
+      }
+
+      if (!string.IsNullOrEmpty(ps.PreviewImage)) {
+        FileInfo fi = new FileInfo(ps.PreviewImage);
+        if (fi.Exists) {
+          loadPreviewImage(ps.PreviewImage);
+        }
+      }
 
       currentPreset = ps;
     }
@@ -123,23 +154,30 @@ namespace ImgRescale
 
     private void initPresets()
     {
-      var presets = SerializedArray.Deserialize(settings.presets);
+      Log.Debug("initPresets: {0}\n", settings.presets);
+      var presets = PresetsList.ToObject(settings.presets);
 
-      if (presets == null)
-        return;
-
-      foreach (var item in presets) {
-        var ps = (Preset)item;
-        realPresets.Add(ps);
-        presetModel.Add(ps.Name);
+      if (presets != null) {
+        foreach (var item in presets) {
+          var ps = (Preset)item;
+          realPresets.Add(ps);
+        }
       }
 
-      Log.Debug("Preset model length: {0}\n", presetModel.Count);
+      cbPresetBinding.DataSource = realPresets;
+      cbPresets.DataSource = cbPresetBinding;
+      cbPresets.DisplayMember = "Name";
+
+      foreach (var item in realPresets) {
+        Log.Debug("Item: {0}\n", item.Name);
+      }
+
+      Log.Debug("Preset model length: {0}\n", realPresets.Count);
     }
 
     private void loadPresets(string name)
     {
-      var presets = SerializedArray.Deserialize(settings.presets);
+      var presets = PresetsList.ToObject(settings.presets);
       
       if (presets == null)
         return;
@@ -148,16 +186,6 @@ namespace ImgRescale
         Preset ps = (Preset)presets[0];
         Log.Debug("Load presets: {0} > {1}\n", presets.Count, ps.Name);
       }
-
-
-
-      var items = cbPresets.Items;
-      
-      if (items.Count > 0)
-        cbPresets.Items.Clear();
-
-
-
     }
 
     private void Form1_Load(object sender, EventArgs e)
@@ -429,6 +457,55 @@ namespace ImgRescale
       contrast = 1f - (Convert.ToInt32(value) / 100f);
     }
 
+    private void loadPreviewImage(string path)
+    {
+      btnPreview.Enabled = false;
+      BackgroundWorker bw = new BackgroundWorker();
+      bw.DoWork += new DoWorkEventHandler((xsender, xe) =>
+      {
+        if (pictureBox1.Image != null)
+          pictureBox1.Image.Dispose();
+
+        if (pictureBox2.Image != null)
+          pictureBox2.Image.Dispose();
+
+        if (previewImg != null)
+          previewImg.Dispose();
+
+        var fi = new FileInfo(path);
+        settings.lastPreviewDir = fi.DirectoryName;
+        settings.Save();
+
+        Log.Debug("Load file: {0}\n", path);
+        previewPath = path;
+
+        Bitmap tmp = new Bitmap(previewPath);
+        int[] cst = Gfx.GetConstraints(tmp.Width, tmp.Height, PREVIEW_MAX_WIDTH, PREVIEW_MAX_WIDTH);
+        previewImg = Gfx.ScaleImage(tmp, cst[0], cst[1]);
+
+        Bitmap img = new Bitmap(previewImg);
+        Bitmap img2 = new Bitmap(previewImg);
+
+        tmp.Dispose();
+
+        pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+        pictureBox1.Image = (System.Drawing.Image)img;
+
+        pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
+        pictureBox2.Image = (System.Drawing.Image)img2;
+      });
+
+      bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler((xsender, xe) =>
+      {
+        Log.Debug("Loaded Done\n");
+        btnPreview.Enabled = true;
+      });
+
+      Log.Debug("Loading image...");
+
+      bw.RunWorkerAsync();
+    }
+
     private void pictureBox1_DoubleClick(object sender, EventArgs e)
     {
       openFileDialog1.Filter = "Bildfiler (*.JPG;*.JPEG;*.PNG;*.TIFF;*.BMP)|*.JPG;*.JPEG;*.PNG;*.TIFF;*.BMP|Alla filer (*.*)|*.*";
@@ -439,51 +516,7 @@ namespace ImgRescale
 
       var res = openFileDialog1.ShowDialog();
       if (res == System.Windows.Forms.DialogResult.OK) {
-        btnPreview.Enabled = false;
-        BackgroundWorker bw = new BackgroundWorker();
-        bw.DoWork += new DoWorkEventHandler((xsender, xe) =>
-        {
-          if (pictureBox1.Image != null)
-            pictureBox1.Image.Dispose();
-
-          if (pictureBox2.Image != null)
-            pictureBox2.Image.Dispose();
-
-          if (previewImg != null)
-            previewImg.Dispose();
-
-          var fi = new FileInfo(openFileDialog1.FileNames[0]);
-          settings.lastPreviewDir = fi.DirectoryName;
-          settings.Save();
-
-          Log.Debug("Load file: {0}\n", openFileDialog1.FileNames[0]);
-          previewPath = openFileDialog1.FileNames[0];
-
-          Bitmap tmp = new Bitmap(previewPath);
-          int[] cst = Gfx.GetConstraints(tmp.Width, tmp.Height, PREVIEW_MAX_WIDTH, PREVIEW_MAX_WIDTH);
-          previewImg = Gfx.ScaleImage(tmp, cst[0], cst[1]);
-
-          Bitmap img = new Bitmap(previewImg);
-          Bitmap img2 = new Bitmap(previewImg);
-
-          tmp.Dispose();
-        
-          pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
-          pictureBox1.Image = (System.Drawing.Image)img;
-
-          pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
-          pictureBox2.Image = (System.Drawing.Image)img2;
-        });
-
-        bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler((xsender, xe) =>
-        {
-          Log.Debug("Loaded Done\n");
-          btnPreview.Enabled = true;
-        });
-
-        Log.Debug("Loading image...");
-
-        bw.RunWorkerAsync();
+        loadPreviewImage(openFileDialog1.FileNames[0]);
       }
     }
 
@@ -580,6 +613,15 @@ namespace ImgRescale
         Log.Debug("Update preset list\n");
         loadPresets();
       }
+    }
+
+    private void cbPresets_SelectedIndexChanged(object sender, EventArgs e)
+    {
+      var cb = (ComboBox)sender;
+      Preset ps = cb.SelectedItem as Preset;
+
+      if (ps != null)
+        LoadPreset(ps);
     }
   }
 }
